@@ -1,0 +1,114 @@
+---
+- name: provision ec2 instance
+  hosts: localhost
+  connection: localhost
+  roles:
+  - role: aws
+  become: yes
+
+- name: yum update hosts
+  hosts:
+    cluster_master
+    indexer
+    search_head
+    deployer
+  remote_user: ec2-user
+  become: yes
+
+  tasks:
+  - name: upgrade all packages
+    yum:
+      name: '*'
+      state: latest
+
+  - name: upgrade wget packages
+    yum:
+      name: wget
+      state: latest
+
+- hosts: all
+  roles:
+  - role: common
+  remote_user: ec2-user
+  become: yes
+
+- hosts: cluster_master
+  roles:
+  - role: cm
+  remote_user: ec2-user
+  become: yes
+
+- hosts: indexer
+  roles:
+  - role: idx
+  remote_user: ec2-user
+  become: yes
+
+- hosts: deployer
+  roles:
+  - role: deployer
+  remote_user: ec2-user
+  become: yes
+
+- hosts: search_head
+  roles:
+  - role: sh
+  remote_user: ec2-user
+  become: yes
+
+- name: start services for cluster master
+  hosts: cluster_master
+  remote_user: ec2-user
+  become: yes
+
+  gather_facts: yes
+
+  tasks:
+  - name: Start Splunk Service (cluster master)
+    command: /opt/splunk/bin/splunk start
+    become: true
+    become_user: splunk
+
+- name: start services for deployer
+  hosts: deployer
+  remote_user: ec2-user
+  become: yes
+
+  gather_facts: yes
+
+  tasks:
+  - name: Start Splunk Service (deployer)
+    command: /opt/splunk/bin/splunk start
+    become: true
+    become_user: splunk
+
+- name: start services
+  hosts:
+    indexer
+    search_head
+  remote_user: ec2-user
+  become: yes
+
+  gather_facts: yes
+
+  tasks:
+  - name: Start Splunk Service (indexers and search heads)
+    command: /opt/splunk/bin/splunk start
+    become: true
+    become_user: splunk
+    async: 300
+    poll: 5
+
+#- name: initiate search head cluster
+#  hosts: shcmember
+#  roles:
+#  - role: shcmember
+#  remote_user: ec2-user
+#  become: yes
+
+- name: elect search head cluster captain
+  hosts: captain
+  roles:
+  - role: captain
+  remote_user: ec2-user
+  become: yes

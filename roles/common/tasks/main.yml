@@ -1,0 +1,96 @@
+---
+- name: Download splunk binary
+  get_url:
+    url: https://download.splunk.com/products/splunk/releases/{{ version }}/linux/{{ installer }}
+    dest: /tmp/{{installer}}
+    force: no
+
+- name: extract splunk locally
+  unarchive:
+    remote_src: yes
+    src: /tmp/{{installer}}
+    dest: /opt/
+
+- name: Set a hostname
+  ansible.builtin.hostname:
+    name: '{{servername}}'
+
+- name: Add the user 'splunk' with a specific uid and a primary group of 'splunk'
+  user:
+    name: splunk
+    comment: Splunk service account
+
+- name: Add default user configuration
+  lineinfile:
+    path: /opt/splunk/etc/system/local/user-seed.conf
+    line: |
+      [user_info]
+      USERNAME = admin
+      PASSWORD = {{splunk_admin_password}}
+    create: yes
+
+- name: Add default server configuration
+  lineinfile:
+    path: /opt/splunk/etc/system/local/web.conf
+    line: |
+      [settings]
+      enableSplunkWebSSL = True
+      httpport = 8443
+      max_upload_size = 1024
+    create: yes
+
+- name: Add default server configuration
+  lineinfile:
+    path: /opt/splunk/etc/system/local/server.conf
+    line: |
+      [general]
+      serverName = {{servername}}
+
+      [diskUsage]
+      minFreeSpace = 1000
+
+      [kvstore]
+      storageEngine = wiredTiger
+      storageEngineMigration = true
+    create: yes
+
+- name: Add default inputs configuration
+  lineinfile:
+    path: /opt/splunk/etc/system/local/inputs.conf
+    line: |
+      [default]
+      host = {{servername}}
+    create: yes
+
+- name: Give splunk owner rights to the whole folder
+  file:
+    path: /opt/splunk
+    state: directory
+    recurse: yes
+    owner: splunk
+    group: splunk
+
+- name: Forward port 443 to 8443 for Splunk (iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 443 -j REDIRECT --to-port 8443)
+  iptables:
+    table: nat
+    chain: PREROUTING
+    in_interface: eth0
+    protocol: tcp
+    match: tcp
+    destination_port: '443'
+    jump: REDIRECT
+    to_ports: '8443'
+    comment: Redirect https web traffic to port 8443
+  become: yes
+
+- name: Configure and then Start Splunk Service
+  shell: |
+    /opt/splunk/bin/splunk enable boot-start -user splunk --accept-license --answer-yes --no-prompt
+    #sudo -i -u splunk /opt/splunk/bin/splunk start
+
+- name: Add iptables to auto start script
+  lineinfile:
+    path: /etc/init.d/splunk
+    line: iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 443 -j REDIRECT --to-port 8443
+    insertbefore: '^exit \$RETVAL$'
+    create: no

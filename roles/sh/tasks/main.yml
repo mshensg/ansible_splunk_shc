@@ -1,0 +1,110 @@
+---
+- name: Collect the system facts under ansible_facts.fqdn
+  ansible.builtin.setup:
+    gather_subset:
+      - '!all'
+      - '!min'
+      - network
+
+- name: connect indexers together
+  set_fact:
+    indexers: "{{ indexers + [item + ':' + hostvars[item]['input_port']|string] }}"
+  with_items: "{{ groups['indexer'] }}"
+
+- debug:
+    msg: "Indexers are: {{indexers}}."
+
+- name: connect string
+  set_fact:
+    indexeroutput: "{{indexers|join(',')}}"
+
+- debug:
+    msg: "Forwarding data to {{indexeroutput}} in splunk servers."
+
+- name: Add default outputs configuration
+  lineinfile:
+    path: /opt/splunk/etc/system/local/outputs.conf
+    line: |
+      #[tcpout]
+      #defaultGroup = indexers
+
+      #[tcpout:indexers]
+      #server = {{indexeroutput}}
+
+      [indexer_discovery:idxes]
+      pass4SymmKey = idxdiscovery
+      master_uri = https://{{ groups['cluster_master'][0] }}:8089
+      manager_uri = https://{{ groups['cluster_master'][0] }}:8089
+
+      [tcpout:idxgroup]
+      indexerDiscovery = idxes
+      useACK = true
+
+      [tcpout]
+      defaultGroup = idxgroup
+    create: yes
+
+- name: Add default server configuration (multisite)
+  lineinfile:
+    path: /opt/splunk/etc/system/local/server.conf
+    line: |
+
+      [general]
+      site = {{ site }}
+
+      [clustering]
+      multisite = true
+      master_uri = https://{{ groups['cluster_master'][0] }}:8089
+      manager_uri = https://{{ groups['cluster_master'][0] }}:8089
+      mode = searchhead
+      pass4SymmKey = {{ hostvars[groups['cluster_master'][0]]['cluster_pass'] }}
+
+      [license]
+      master_uri = https://{{ groups['cluster_master'][0] }}:8089
+      manager_uri = https://{{ groups['cluster_master'][0] }}:8089
+
+    create: yes
+  when: cluster_type != "single"
+
+- name: Add default server configuration (singlesite)
+  lineinfile:
+    path: /opt/splunk/etc/system/local/server.conf
+    line: |
+
+      [clustering]
+      master_uri = https://{{ groups['cluster_master'][0] }}:8089
+      manager_uri = https://{{ groups['cluster_master'][0] }}:8089
+      mode = searchhead
+      pass4SymmKey = {{ hostvars[groups['cluster_master'][0]]['cluster_pass'] }}
+
+      [license]
+      master_uri = https://{{ groups['cluster_master'][0] }}:8089
+      manager_uri = https://{{ groups['cluster_master'][0] }}:8089
+
+    create: yes
+  when: cluster_type == "single"
+
+- name: Add default server configuration (search head cluster)
+  lineinfile:
+    path: /opt/splunk/etc/system/local/server.conf
+    line: |
+
+      [shclustering]
+      conf_deploy_fetch_url = https://{{groups['deployer'][0]}}:8089
+      disabled = 0
+      mgmt_uri = https://{{ansible_facts.eth0.ipv4.address}}:8089
+      pass4SymmKey = {{cluster_pass}} 
+      shcluster_label = {{shc_cluster_label}}
+ 
+      [replication_port://{{replication_port}}]
+
+    create: yes
+  when: searchheadcluster == "yes"
+
+- name: Give splunk owner rights to the whole folder
+  file:
+    path: /opt/splunk
+    state: directory
+    recurse: yes
+    owner: splunk
+    group: splunk

@@ -1,0 +1,48 @@
+---
+- name: Add default inputs configuration
+  lineinfile:
+    path: /opt/splunk/etc/system/local/inputs.conf
+    line: |
+
+      [splunktcp://{{ input_port }}]
+      disabled = false
+
+    create: yes
+
+- name: Add default server configuration (multisite)
+  lineinfile:
+    path: /opt/splunk/etc/system/local/server.conf
+    line: |
+
+      [general]
+      site = {{ site }}
+
+    create: yes
+  when: cluster_type != "single"
+
+- name: Add default server configuration
+  lineinfile:
+    path: /opt/splunk/etc/system/local/server.conf
+    line: |
+
+      [replication_port://{{ replication_port }}]
+
+      [clustering]
+      master_uri = https://{{ groups['cluster_master'][0] }}:8089
+      manager_uri = https://{{ groups['cluster_master'][0] }}:8089
+      mode = slave
+      pass4SymmKey = {{ hostvars[groups['cluster_master'][0]]['cluster_pass'] }}
+
+      [license]
+      master_uri = https://{{ groups['cluster_master'][0] }}:8089
+      manager_uri = https://{{ groups['cluster_master'][0] }}:8089
+
+    create: yes
+
+- name: Give splunk owner rights to the whole folder
+  file:
+    path: /opt/splunk
+    state: directory
+    recurse: yes
+    owner: splunk
+    group: splunk

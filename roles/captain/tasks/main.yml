@@ -1,0 +1,23 @@
+---
+- name: connect search heads together
+  set_fact:
+    search_heads: "{{ search_heads + ['https://' + item + ':8089'] }}"
+  with_items: "{{ groups['search_head'] }}"
+
+- debug:
+    msg: "Search Heads are: {{ search_heads }}."
+
+- name: connect string
+  set_fact:
+    search_heads_list: "{{ search_heads|join(',') }}"
+
+- name: Pause for 1 minutes to wait for SHC member sync
+  ansible.builtin.pause:
+    minutes: 1
+
+- name: elect the capitain
+  command: /opt/splunk/bin/splunk bootstrap shcluster-captain -servers_list "{{ search_heads_list }}" -auth admin:{{splunk_admin_password}}
+  become: true
+  become_user: splunk
+  async: 90
+  poll: 5

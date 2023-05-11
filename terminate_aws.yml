@@ -1,0 +1,15 @@
+---
+- name: terminate ec2 instances
+  hosts: localhost
+  connection: localhost
+  become: yes
+
+  tasks:
+  - name: Terminate instances that were previously launched
+    ec2:
+      #      aws_access_key: "{{ aws_access_key }}"
+      #      aws_secret_key: "{{ aws_secret_key }}"
+      region: ap-southeast-1
+      state: 'absent'
+      instance_ids: '{{ groups.ec2_instances }}'
+
