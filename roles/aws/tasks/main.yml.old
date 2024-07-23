@@ -3,129 +3,142 @@
     generation_guid: "{{ 9999999999999999999999 | random | to_uuid }}"
 
 - name: create ec2 instance for cluster master
-  ec2_instance:
+  ec2:
     #    aws_access_key: "{{ aws_access_key }}"
     #    aws_secret_key: "{{ aws_secret_key }}"
-    image_id: "{{ ami_image }}"
+    image: "{{ ami_image }}"
     key_name: "{{ key_name }}"
     wait: yes
     instance_type: "{{ cluster_master_type }}"
-    security_group: "{{ security_group_id }}"
+    group_id: "{{ security_group_id }}"
     region: ap-southeast-1
     volumes:
     - device_name: /dev/xvda
-      ebs:
-        volume_type: gp3
-        volume_size: 14
-        delete_on_termination: true
-    tags:
+      volume_type: gp3
+      volume_size: 10
+      delete_on_termination: true
+    instance_tags:
       Name: "cluster_master {{ instance_id }}"
       Purpose: "{{ instance_id }}_{{ generation_guid }}"
       Group: by ansible
-      splunkit_environment_type: non-prd
-      splunkit_data_classification: private
+    count_tag:
+      Name: Ansible
+    exact_count: 1
+    instance_tags:
+      splunkit_environment_type: Non-Production
+      splunkit_data_classification: Private
   register: ec2clustermaster
 
 - name: create ec2 instance for site1 indexers
-  ec2_instance:
+  ec2:
     #    aws_access_key: "{{ aws_access_key }}"
     #    aws_secret_key: "{{ aws_secret_key }}"
-    image_id: "{{ ami_image }}"
+    image: "{{ ami_image }}"
     key_name: "{{ key_name }}"
     wait: yes
     instance_type: "{{ indexer_type }}"
-    security_group: "{{ security_group_id }}"
+    group_id: "{{ security_group_id }}"
     region: ap-southeast-1
     volumes:
     - device_name: /dev/xvda
-      ebs:
-        volume_type: gp3
-        volume_size: 24
-        delete_on_termination: true
-    tags:
+      volume_type: gp3
+      volume_size: 20
+      delete_on_termination: true
+    instance_tags:
       Name: "site1_indexers {{ instance_id }}"
       Purpose: "{{ instance_id }}_{{ generation_guid }}"
       Group: by ansible
-      splunkit_environment_type: non-prd
-      splunkit_data_classification: private
-    count: "{{ site1indexers }}"
+    count_tag:
+      Name: Ansible
+    exact_count: "{{ site1indexers }}"
+    instance_tags:
+      splunkit_environment_type: Non-Production
+      splunkit_data_classification: Private
   register: ec2site1indexers
 
 - name: create ec2 instance for site2 indexers
-  ec2_instance:
+  ec2:
     #    aws_access_key: "{{ aws_access_key }}"
     #    aws_secret_key: "{{ aws_secret_key }}"
-    image_id: "{{ ami_image }}"
+    image: "{{ ami_image }}"
     key_name: "{{ key_name }}"
     wait: yes
     instance_type: "{{ indexer_type }}"
-    security_group: "{{ security_group_id }}"
+    group_id: "{{ security_group_id }}"
     region: ap-southeast-1
     volumes:
     - device_name: /dev/xvda
-      ebs:
-        volume_type: gp3
-        volume_size: 24
-        delete_on_termination: true
-    tags:
+      volume_type: gp3
+      volume_size: 20
+      delete_on_termination: true
+    instance_tags:
       Name: "site2_indexers {{ instance_id }}"
       Purpose: "{{ instance_id }}_{{ generation_guid }}"
       Group: by ansible
-      splunkit_environment_type: non-prd
-      splunkit_data_classification: private
-    count: "{{ site2indexers }}"
+    count_tag:
+      Name: Ansible
+    exact_count: "{{ site2indexers }}"
+    instance_tags:
+      splunkit_environment_type: Non-Production
+      splunkit_data_classification: Private
   register: ec2site2indexers
   when: cluster_type != "single"
 
 - name: create ec2 instance for deployer
-  ec2_instance:
+  ec2:
     #    aws_access_key: "{{ aws_access_key }}"
     #    aws_secret_key: "{{ aws_secret_key }}"
-    image_id: "{{ ami_image }}"
+    image: "{{ ami_image }}"
     key_name: "{{ key_name }}"
     wait: yes
     instance_type: "{{ deployer_type }}"
-    security_group: "{{ security_group_id }}"
+    group_id: "{{ security_group_id }}"
     region: ap-southeast-1
     volumes:
     - device_name: /dev/xvda
-      ebs:
-        volume_type: gp3
-        volume_size: 14
-        delete_on_termination: true
-    tags:
+      volume_type: gp3
+      volume_size: 10
+      delete_on_termination: true
+    instance_tags:
       Name: "deployer {{ instance_id }}"
       Purpose: "{{ instance_id }}_{{ generation_guid }}"
-      splunkit_environment_type: non-prd
-      splunkit_data_classification: private
+      Group: by ansible
+    count_tag:
+      Name: Ansible
+    exact_count: 1
+    tags:
+      splunkit_environment_type: Non-Production
+      splunkit_data_classification: Private
   register: ec2deployer
   when:
     - searchheadcluster == "yes"
     - searchheads > 0
 
 - name: create ec2 instance for search heads
-  ec2_instance:
+  ec2:
     #    aws_access_key: "{{ aws_access_key }}"
     #    aws_secret_key: "{{ aws_secret_key }}"
-    image_id: "{{ ami_image }}"
+    image: "{{ ami_image }}"
     key_name: "{{ key_name }}"
     wait: yes
     instance_type: "{{ search_head_type }}"
-    security_group: "{{ security_group_id }}"
+    group_id: "{{ security_group_id }}"
     region: ap-southeast-1
     volumes:
     - device_name: /dev/xvda
-      ebs:
-        volume_type: gp3
-        volume_size: 14
-        delete_on_termination: true
-    tags:
+      volume_type: gp3
+      volume_size: 10
+      delete_on_termination: true
+    instance_tags:
       Name: "search_heads {{ instance_id }}"
       Purpose: "{{ instance_id }}_{{ generation_guid }}"
       Group: by ansible
-      splunkit_environment_type: non-prd
-      splunkit_data_classification: private
-    count: "{{ searchheads }}"
+    count_tag:
+      Name: Ansible
+    exact_count: "{{ searchheads }}"
+    tags:
+      splunkit_environment_type: Non-Production
+      splunkit_data_classification: Private
   register: ec2searchhead
   when: searchheads != 0
 
@@ -140,10 +153,6 @@
     line: "[ec2_instances]"
     state: present
     create: yes
-
-      #- name: debug message
-      #debug:
-      #msg: "{{ ec2clustermaster }}"
 
 - name: all ec2 instances - cluster master - add to inventory
   lineinfile:
@@ -176,27 +185,27 @@
     path: ./ec2_inventory
     line: "{{ item }}"
   loop: "{{ ec2deployer.instance_ids }}"
-  when: searchheadcluster == "yes" and searchheads != 0
+  when: searchheadcluster == "yes"
 
 - name: all ec2 instances - cluster master
   set_fact:
-    ec2instances: "{{ ec2instances + [item.private_ip_address] }}"
+    ec2instances: "{{ ec2instances + [item.private_ip] }}"
   with_items: "{{ ec2clustermaster.instances }}"
 
 - name: all ec2 instances - site 1 indexers
   set_fact:
-    ec2instances: "{{ ec2instances + [item.private_ip_address] }}"
+    ec2instances: "{{ ec2instances + [item.private_ip] }}"
   with_items: "{{ ec2site1indexers.instances }}"
 
 - name: all ec2 instances - site 2 indexers
   set_fact:
-    ec2instances: "{{ ec2instances + [item.private_ip_address] }}"
+    ec2instances: "{{ ec2instances + [item.private_ip] }}"
   with_items: "{{ ec2site2indexers.instances }}"
   when: cluster_type != "single"
 
 - name: all ec2 instances - ec2deployer
   set_fact:
-    ec2instances: "{{ ec2instances + [item.private_ip_address] }}"
+    ec2instances: "{{ ec2instances + [item.private_ip] }}"
   with_items: "{{ ec2deployer.instances }}"
   when:
     - searchheadcluster == "yes"
@@ -204,7 +213,7 @@
 
 - name: all ec2 instances - search heads
   set_fact:
-    ec2instances: "{{ ec2instances + [item.private_ip_address] }}"
+    ec2instances: "{{ ec2instances + [item.private_ip] }}"
   with_items: "{{ ec2searchhead.instances }}"
   when: searchheads != 0
 
@@ -233,7 +242,7 @@
   add_host:
     name: "{{ item }}"
     groups: cluster_master
-    servername: 'clustermaster-{{ instance_id }}'
+    servername: 'clustermaster_{{ instance_id }}'
     site: site0
   loop: "{{ ec2instances[0:1] }}"
 
@@ -241,7 +250,7 @@
   add_host:
     name: "{{ item }}"
     groups: indexer
-    servername: 'idx{{ idx_number+1 }}-s1-{{ instance_id }}'
+    servername: 'idx{{ idx_number+1 }}_s1_{{ instance_id }}'
     site: 'site1'
   loop: "{{ ec2instances[1:site1indexers+1] }}"
   loop_control:
@@ -251,7 +260,7 @@
   add_host:
     name: "{{ item }}"
     groups: indexer
-    servername: 'idx{{ idx_number+1 }}-s2-{{ instance_id }}'
+    servername: 'idx{{ idx_number+1 }}_s2_{{ instance_id }}'
     site: 'site2'
   loop: "{{ ec2instances[site1indexers+1:site1indexers+site2indexers+1] }}"
   loop_control:
@@ -262,7 +271,7 @@
   add_host:
     name: "{{ item }}"
     groups: deployer
-    servername: 'deployer-{{ instance_id }}'
+    servername: 'deployer_{{ instance_id }}'
     site: site0
   loop: "{{ ec2instances[site1indexers+site2indexers+1:site1indexers+site2indexers+2] }}"
   when:
@@ -275,7 +284,7 @@
     groups: 
       - search_head
       - shcmember
-    servername: 'searchhead{{ sh_number+1 }}-{{ instance_id }}'
+    servername: 'searchhead{{ sh_number+1 }}_{{ instance_id }}'
     site: 'site{{ sh_site }}'
   loop: "{{ ec2instances[site1indexers+site2indexers+2:] }}"
   loop_control:
@@ -288,7 +297,7 @@
   add_host:
     name: "{{ item }}"
     groups: search_head
-    servername: 'searchhead{{ sh_number+1 }}-{{ instance_id }}'
+    servername: 'searchhead{{ sh_number+1 }}_{{ instance_id }}'
     site: 'site{{ (sh_number+1) % 3}}'
   loop: "{{ ec2instances[site1indexers+site2indexers+1:] }}"
   loop_control:
@@ -301,7 +310,7 @@
   add_host:
     name: "{{ ec2instances[site1indexers+site2indexers+2] }}"
     groups: captain
-    servername: 'searchhead1-{{ instance_id }}'
+    servername: 'searchhead1_{{ instance_id }}'
   when:
     - searchheadcluster == "yes"
     - searchheads > 0

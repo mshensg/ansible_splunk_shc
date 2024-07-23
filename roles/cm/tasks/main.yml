@@ -180,6 +180,16 @@
 
     create: yes
 
+- name: Add default inputs configuration
+  lineinfile:
+    path: /opt/splunk/etc/master-apps/org_idx_inputs/local/inputs.conf
+    line: |
+
+      [splunktcp://{{ input_port }}]
+      disabled = false
+
+    create: yes
+
 - name: Add indexer banner
   lineinfile:
     path: /opt/splunk/etc/master-apps/_cluster/local/global-banner.conf

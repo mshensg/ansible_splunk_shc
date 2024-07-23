@@ -1,0 +1,27 @@
+---
+- name: uninstall_splunk
+  hosts: all
+  remote_user: ec2-user
+  become: yes
+
+  tasks:
+  - name: Stop Service and Remove Auto Start
+    shell: |
+      if test -f /opt/splunk/bin/splunk
+      then
+        sudo -i -u splunk /opt/splunk/bin/splunk stop
+        chkconfig --del splunk
+      fi
+      exit 0
+
+  - name: Delete Splunk AutoStart in System
+    file:
+      path: /etc/init.d/splunk
+      state: absent
+
+  - name: Delete Splunk Folder
+    file:
+      path: /opt/splunk
+      state: absent
+
+

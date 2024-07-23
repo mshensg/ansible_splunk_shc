@@ -26,6 +26,11 @@
       name: wget
       state: latest
 
+  - name: upgrade iptables packages
+    yum:
+      name: iptables
+      state: latest
+
 - hosts: all
   roles:
   - role: common
@@ -96,8 +101,8 @@
     command: /opt/splunk/bin/splunk start
     become: true
     become_user: splunk
-    async: 300
-    poll: 5
+    async: 600
+    poll: 30
 
 #- name: initiate search head cluster
 #  hosts: shcmember

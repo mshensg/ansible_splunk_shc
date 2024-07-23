@@ -1,0 +1,11 @@
+[cluster_master]
+172.31.26.181 servername=clustermaster site=site0
+
+[indexer]
+172.31.21.19 servername=idx1_s1 site=site1
+172.31.22.50  servername=idx2_s1 site=site1
+172.31.27.192 servername=idx1_s2 site=site2
+172.31.30.238 servername=idx2_s2 site=site2
+
+[search_head]
+172.31.27.189 servername=searchhead1 site=site1

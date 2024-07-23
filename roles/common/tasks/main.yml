@@ -4,6 +4,7 @@
     url: https://download.splunk.com/products/splunk/releases/{{ version }}/linux/{{ installer }}
     dest: /tmp/{{installer}}
     force: no
+    validate_certs: false
 
 - name: extract splunk locally
   unarchive:
@@ -74,7 +75,8 @@
   iptables:
     table: nat
     chain: PREROUTING
-    in_interface: eth0
+    in_interface: ens5
+    #in_interface: eth0
     protocol: tcp
     match: tcp
     destination_port: '443'
@@ -91,6 +93,7 @@
 - name: Add iptables to auto start script
   lineinfile:
     path: /etc/init.d/splunk
-    line: iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 443 -j REDIRECT --to-port 8443
+    line: iptables -A PREROUTING -t nat -i ens5 -p tcp --dport 443 -j REDIRECT --to-port 8443
+    #line: iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 443 -j REDIRECT --to-port 8443
     insertbefore: '^exit \$RETVAL$'
     create: no
