@@ -1,13 +1,13 @@
 ---
-- name: Add default inputs configuration
-  lineinfile:
-    path: /opt/splunk/etc/system/local/inputs.conf
-    line: |
-
-      [splunktcp://{{ input_port }}]
-      disabled = false
-
-    create: yes
+#- name: Add default inputs configuration
+#  lineinfile:
+#    path: /opt/splunk/etc/system/local/inputs.conf
+#    line: |
+#
+#      [splunktcp://{{ input_port }}]
+#      disabled = false
+#
+#    create: yes
 
 - name: Add default server configuration (multisite)
   lineinfile:

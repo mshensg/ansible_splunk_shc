@@ -7,7 +7,8 @@
       - network
 
 - name: initialize the search head cluster
-  command: /opt/splunk/bin/splunk init shcluster-config -auth admin:{{splunk_admin_password}} -mgmt_uri https://{{ansible_facts.eth0.ipv4.address}}:8089 -replication_port {{replication_port}} -replication_factor {{searchheads}} -conf_deploy_fetch_url https://{{groups['deployer'][0]}}:8089 -secret {{cluster_pass}} -shcluster_label {{shc_cluster_label}}
+  command: /opt/splunk/bin/splunk init shcluster-config -auth admin:{{splunk_admin_password}} -mgmt_uri https://{{ansible_facts.ens5.ipv4.address}}:8089 -replication_port {{replication_port}} -replication_factor {{searchheads}} -conf_deploy_fetch_url https://{{groups['deployer'][0]}}:8089 -secret {{cluster_pass}} -shcluster_label {{shc_cluster_label}}
+  #command: /opt/splunk/bin/splunk init shcluster-config -auth admin:{{splunk_admin_password}} -mgmt_uri https://{{ansible_facts.eth0.ipv4.address}}:8089 -replication_port {{replication_port}} -replication_factor {{searchheads}} -conf_deploy_fetch_url https://{{groups['deployer'][0]}}:8089 -secret {{cluster_pass}} -shcluster_label {{shc_cluster_label}}
   become: true
   become_user: splunk
   async: 90
@@ -18,4 +19,12 @@
   become: true
   become_user: splunk
   async: 300
+  poll: 5
+
+- name: add search head cluster member
+  command: /opt/splunk/bin/splunk/splunk add shcluster-member -current_member_uri https://{{ansible_facts.ens5.ipv4.address}}:8089 -auth admin:{{splunk_admin_password}}
+  #command: /opt/splunk/bin/splunk/splunk add shcluster-member -current_member_uri https://{{ansible_facts.eth0.ipv4.address}}:8089 -auth admin:{{splunk_admin_password}}
+  become: true
+  become_user: splunk
+  async: 30
   poll: 5

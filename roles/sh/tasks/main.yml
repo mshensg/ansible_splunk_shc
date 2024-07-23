@@ -92,7 +92,7 @@
       [shclustering]
       conf_deploy_fetch_url = https://{{groups['deployer'][0]}}:8089
       disabled = 0
-      mgmt_uri = https://{{ansible_facts.eth0.ipv4.address}}:8089
+      mgmt_uri = https://{{ansible_facts.ens5.ipv4.address}}:8089
       pass4SymmKey = {{cluster_pass}} 
       shcluster_label = {{shc_cluster_label}}
  
